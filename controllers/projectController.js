@@ -4,33 +4,39 @@ const Project = require('../models/Project');
 const addProject = async (req, res) => {
   try {
     const { name, description } = req.body;
-    
-    if (!req.file) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Please upload an image' 
+
+    // Validate required fields based on schema
+    if (!name || !description) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide all required fields: name, description"
       });
     }
 
-    const project = new Project({
-      name: name,
-      description: description,
-      image: req.file.filename
+    const projectData = {
+      name,
+      description
+    };
+
+    // Only add image if provided
+    if (req.file) {
+      projectData.image = req.file.filename;
+    }
+
+    const newProject = await Project.create(projectData);
+
+    res.status(201).json({
+      success: true,
+      message: "Project added successfully",
+      data: newProject
     });
 
-    await project.save();
-
-    res.status(201).json({ 
-      success: true, 
-      message: 'Project added successfully',
-      project: project 
-    });
   } catch (error) {
-    console.error('Error adding project:', error);
-    res.status(500).json({ 
-      success: false, 
-      message: 'Server error',
-      error: error.message 
+    console.error("Error adding project:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error adding project",
+      error: error.message
     });
   }
 };

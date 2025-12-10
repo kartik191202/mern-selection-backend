@@ -4,34 +4,40 @@ const Client = require('../models/Client');
 const addClient = async (req, res) => {
   try {
     const { name, description, designation } = req.body;
-    
-    if (!req.file) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Please upload an image' 
+
+    // Validate required fields based on schema
+    if (!name || !description || !designation) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide all required fields: name, description, designation"
       });
     }
 
-    const client = new Client({
-      name: name,
-      description: description,
-      designation: designation,
-      image: req.file.filename
+    const clientData = {
+      name,
+      description,
+      designation
+    };
+
+    // Only add image if provided
+    if (req.file) {
+      clientData.image = req.file.filename;
+    }
+
+    const newClient = await Client.create(clientData);
+
+    res.status(201).json({
+      success: true,
+      message: "Client added successfully",
+      data: newClient
     });
 
-    await client.save();
-
-    res.status(201).json({ 
-      success: true, 
-      message: 'Client added successfully',
-      client: client 
-    });
   } catch (error) {
-    console.error('Error adding client:', error);
-    res.status(500).json({ 
-      success: false, 
-      message: 'Server error',
-      error: error.message 
+    console.error("Error adding client:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error adding client",
+      error: error.message
     });
   }
 };
